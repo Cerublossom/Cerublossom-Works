@@ -16,17 +16,17 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="{StaticResource WindowBg}" Padding="12" BorderBrush="#9CA3AF" BorderThickness="0,0,0,1">
+        <Border Grid.Row="0" Background="{StaticResource WindowBg}" Padding="16" BorderBrush="#333333" BorderThickness="0,0,0,1">
             <StackPanel Orientation="Horizontal">
-                <DatePicker SelectedDate="{Binding SelectedDate}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                <DatePicker SelectedDate="{Binding SelectedDate}" Margin="0,0,16,0" VerticalAlignment="Center"/>
                 <TextBlock Text="{Binding SelectedDate, StringFormat='dd MMMM yyyy (dddd)'}" VerticalAlignment="Center"
-                           Margin="0,0,24,0" FontSize="14" Foreground="{StaticResource TextMuted}"/>
-                <Button Content="+ Новое бронирование" Command="{Binding NewBookingCommand}" Margin="0,0,12,0"/>
+                           Margin="0,0,32,0" FontSize="14" Foreground="{StaticResource TextLight}"/>
+                <Button Content="+ Новое бронирование" Command="{Binding NewBookingCommand}" Margin="0,0,16,0"/>
                 <Button Content="Обновить" Command="{Binding RefreshCommand}"/>
             </StackPanel>
         </Border>
 
-        <ScrollViewer Grid.Row="1" Margin="12" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="1" Margin="16" VerticalScrollBarVisibility="Auto">
             <ItemsControl ItemsSource="{Binding ResourceCalendars}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -35,13 +35,13 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border Width="290" Margin="6" CornerRadius="8" Background="{StaticResource WindowBg}"
-                                BorderBrush="#9CA3AF" BorderThickness="1" Padding="12">
+                        <Border Width="290" Margin="8" CornerRadius="8" Background="{StaticResource CardBg}"
+                                BorderBrush="{StaticResource BorderLight}" BorderThickness="1" Padding="12">
                             <StackPanel>
-                                <TextBlock Text="{Binding Resource.Name}" FontWeight="Bold" FontSize="15"
-                                           Foreground="{StaticResource Accent}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                                <TextBlock Text="{Binding Resource.Name}" FontWeight="Bold" FontSize="16"
+                                           Foreground="{StaticResource TextDark}" TextWrapping="Wrap" Margin="0,0,0,4"/>
                                 <TextBlock Text="{Binding Resource.ResponsiblePerson.DisplayName, StringFormat='Ответственный: {0}', TargetNullValue='Ответственный не назначен'}"
-                                           FontSize="12" Foreground="{StaticResource TextMuted}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                                           FontSize="12" Foreground="{StaticResource TextMuted}" Margin="0,0,0,12" TextWrapping="Wrap"/>
 
                                 <ItemsControl ItemsSource="{Binding Slots}">
                                     <ItemsControl.ItemsPanel>
@@ -51,15 +51,15 @@
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Margin="0,2" CornerRadius="4" Padding="8,6"
+                                            <Border Margin="0,3" CornerRadius="6" Padding="8,7"
                                                     Background="{Binding IsBooked, Converter={StaticResource SlotBackgroundConverter}}"
-                                                    BorderBrush="#9CA3AF" BorderThickness="1">
+                                                    BorderBrush="{StaticResource BorderLight}" BorderThickness="1">
                                                 <StackPanel Orientation="Vertical">
-                                                    <TextBlock Text="{Binding TimeLabel}" FontSize="12"
+                                                    <TextBlock Text="{Binding TimeLabel}" FontSize="11"
                                                                Foreground="{StaticResource TextMuted}"/>
                                                     <TextBlock Text="{Binding Title}" FontWeight="Bold"
-                                                               Foreground="{StaticResource TextLight}" MaxWidth="240" TextTrimming="CharacterEllipsis"/>
-                                                    <TextBlock Text="{Binding UserName}" FontSize="11"
+                                                               Foreground="{StaticResource TextDark}" MaxWidth="240" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding UserName}" FontSize="10"
                                                                Foreground="{StaticResource TextMuted}" Margin="2,0,0,0"/>
                                                 </StackPanel>
                                                 <Border.InputBindings>

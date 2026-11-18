@@ -10,29 +10,32 @@
         WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="260"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Border Grid.Column="0" Background="{StaticResource WindowBg}" Padding="16,24,16,16">
+        <!-- Боковая навигация (темная, как в макете) -->
+        <Border Grid.Column="0" Background="#0F1717" Padding="20,24,20,20">
             <StackPanel>
-                <TextBlock Text="БРОНИРОВАНИЕ РЕСУРСОВ" FontWeight="Bold" FontSize="16" Foreground="{StaticResource Accent}" Margin="0,0,0,28"/>
+                <TextBlock Text="СБР" FontWeight="Bold" FontSize="24" Foreground="{StaticResource TextLight}" Margin="0,0,0,8"/>
+                <TextBlock Text="Сервис бронирования ресурсов" FontSize="13" Foreground="#888888" TextWrapping="Wrap" Margin="0,0,0,32"/>
 
-                <Button Content="Календарь ресурсов" Command="{Binding ShowCalendarCommand}" Width="210" Margin="0,0,0,8" HorizontalAlignment="Left"/>
-                <Button Content="Создать бронирование" Command="{Binding ShowBookingCommand}" Width="210" Margin="0,0,0,8" HorizontalAlignment="Left"/>
-                <Button Content="Управление ресурсами" Command="{Binding ShowResourcesCommand}" Width="210" Margin="0,0,0,8" HorizontalAlignment="Left"/>
-                <Button Content="Уведомления" Command="{Binding ShowNotificationsCommand}" Width="210" Margin="0,0,0,8" HorizontalAlignment="Left"/>
-                <Button Content="Пользователи" Command="{Binding ShowUsersCommand}" Width="210" Margin="0,0,0,24" HorizontalAlignment="Left"/>
+                <Button Content="Календарь ресурсов" Command="{Binding ShowCalendarCommand}" Width="220" Margin="0,0,0,8" HorizontalAlignment="Left"/>
+                <Button Content="Создать бронирование" Command="{Binding ShowBookingCommand}" Width="220" Margin="0,0,0,8" HorizontalAlignment="Left"/>
+                <Button Content="Управление ресурсами" Command="{Binding ShowResourcesCommand}" Width="220" Margin="0,0,0,8" HorizontalAlignment="Left"/>
+                <Button Content="Уведомления" Command="{Binding ShowNotificationsCommand}" Width="220" Margin="0,0,0,8" HorizontalAlignment="Left"/>
+                <Button Content="Пользователи" Command="{Binding ShowUsersCommand}" Width="220" Margin="0,0,0,24" HorizontalAlignment="Left"/>
 
-                <Border BorderBrush="#444" BorderThickness="0,1,0,0" Margin="0,0,0,16"/>
+                <Border BorderBrush="#333333" BorderThickness="0,1,0,0" Margin="0,0,0,16"/>
 
-                <TextBlock Text="Пользователь:" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,0,4"/>
+                <TextBlock Text="Пользователь:" FontSize="11" Foreground="#888888" Margin="0,0,0,4"/>
                 <TextBlock Text="{Binding CurrentUser.DisplayName}" FontWeight="Bold" Foreground="{StaticResource TextLight}"/>
-                <TextBlock Text="{Binding CurrentUser.Email}" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,2,0,0"/>
-                <TextBlock Text="{Binding CurrentUser.Role}" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,0,16"/>
+                <TextBlock Text="{Binding CurrentUser.Email}" FontSize="11" Foreground="#888888" Margin="0,2,0,0"/>
+                <TextBlock Text="{Binding CurrentUser.Role}" FontSize="11" Foreground="#888888" Margin="0,0,0,16"/>
             </StackPanel>
         </Border>
 
-        <ContentControl Grid.Column="1" Content="{Binding CurrentView}" Margin="16" Background="{StaticResource PanelBg}"/>
+        <!-- Основная область (светлая, как в макете) -->
+        <ContentControl Grid.Column="1" Content="{Binding CurrentView}" Margin="0" Background="{StaticResource PanelBg}"/>
     </Grid>
 </Window>
