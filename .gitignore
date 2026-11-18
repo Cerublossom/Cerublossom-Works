@@ -1,0 +1,21 @@
+## Visual Studio / .NET Framework
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.cache
+*.dotcover
+*.nupkg
+Thumbs.db
+ ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+## Local application data (booking data in XML)
+service/Data/*.xml
+
+## Opencode
+.opencode/

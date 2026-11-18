@@ -1,0 +1,79 @@
+<UserControl x:Class="service.Views.CalendarView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.openxmlformats.org/2006/xaml"
+             xmlns:vm="clr-namespace:service.ViewModels"
+             mc:Ignorable="d"
+             d:DesignHeight="650" d:DesignWidth="950"
+             d:DataContext="{d:DesignInstance vm:CalendarViewModel}">
+    <UserControl.Resources>
+        <vm:SlotBackgroundConverter x:Key="SlotBackgroundConverter"/>
+    </UserControl.Resources>
+    <Grid Background="{StaticResource PanelBg}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="{StaticResource WindowBg}" Padding="12" BorderBrush="#9CA3AF" BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Horizontal">
+                <DatePicker SelectedDate="{Binding SelectedDate}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding SelectedDate, StringFormat='dd MMMM yyyy (dddd)'}" VerticalAlignment="Center"
+                           Margin="0,0,24,0" FontSize="14" Foreground="{StaticResource TextMuted}"/>
+                <Button Content="+ Новое бронирование" Command="{Binding NewBookingCommand}" Margin="0,0,12,0"/>
+                <Button Content="Обновить" Command="{Binding RefreshCommand}"/>
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" Margin="12" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding ResourceCalendars}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" ItemWidth="310"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Width="290" Margin="6" CornerRadius="8" Background="{StaticResource WindowBg}"
+                                BorderBrush="#9CA3AF" BorderThickness="1" Padding="12">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Resource.Name}" FontWeight="Bold" FontSize="15"
+                                           Foreground="{StaticResource Accent}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                                <TextBlock Text="{Binding Resource.ResponsiblePerson.DisplayName, StringFormat='Ответственный: {0}', TargetNullValue='Ответственный не назначен'}"
+                                           FontSize="12" Foreground="{StaticResource TextMuted}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+
+                                <ItemsControl ItemsSource="{Binding Slots}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Vertical"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Margin="0,2" CornerRadius="4" Padding="8,6"
+                                                    Background="{Binding IsBooked, Converter={StaticResource SlotBackgroundConverter}}"
+                                                    BorderBrush="#9CA3AF" BorderThickness="1">
+                                                <StackPanel Orientation="Vertical">
+                                                    <TextBlock Text="{Binding TimeLabel}" FontSize="12"
+                                                               Foreground="{StaticResource TextMuted}"/>
+                                                    <TextBlock Text="{Binding Title}" FontWeight="Bold"
+                                                               Foreground="{StaticResource TextLight}" MaxWidth="240" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding UserName}" FontSize="11"
+                                                               Foreground="{StaticResource TextMuted}" Margin="2,0,0,0"/>
+                                                </StackPanel>
+                                                <Border.InputBindings>
+                                                    <MouseBinding Gesture="LeftClick" Command="{Binding BookCommand}"/>
+                                                </Border.InputBindings>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
