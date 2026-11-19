@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using service.Models;
 
@@ -224,6 +225,58 @@ namespace service.Services
                 return; // не удалить, если есть активные бронирования
             _users.Remove(user);
             Persist();
+        }
+
+        // Заполняем демо-данными при первом запуске (пользователи и ресурсы)
+        public void EnsureSeed()
+        {
+            Load();
+
+            if (!_users.Any())
+            {
+                _users.Add(new User(1, "Иван Иванов", "ivanov@company.com", "Administrator"));
+                _users.Add(new User(2, "Мария Петрова", "petrova@company.com", "Employee"));
+                _users.Add(new User(3, "Алексей Сидоров", "sidorov@company.com", "Employee"));
+                _users.Add(new User(4, "Ольга Кузнецова", "kuznetsova@company.com", "Employee"));
+            }
+
+            if (!_resources.Any())
+            {
+                _resources.Add(new Resource { Id = 1, Name = "Конференц-зал А", Type = "ConferenceRoom", Description = "Переговорка на 12 человек, проектор, доска", ImagePath = DemoImages.RoomA, ResponsiblePersonId = _users.FirstOrDefault(u => u.Id == 1)?.Id, IsActive = true });
+                _resources.Add(new Resource { Id = 2, Name = "Конференц-зал Б", Type = "ConferenceRoom", Description = "Малый переговорный зал на 6 человек", ImagePath = DemoImages.RoomB, ResponsiblePersonId = _users.FirstOrDefault(u => u.Id == 2)?.Id, IsActive = true });
+                _resources.Add(new Resource { Id = 3, Name = "Проектор Epson", Type = "Equipment", Description = "Переносной проектор для презентаций", ImagePath = DemoImages.Projector, ResponsiblePersonId = _users.FirstOrDefault(u => u.Id == 3)?.Id, IsActive = true });
+                _resources.Add(new Resource { Id = 4, Name = "Фотограф (студия)", Type = "Photographer", Description = "Услуги корпоративного фотографа по бронированию слота", ImagePath = DemoImages.Photographer, ResponsiblePersonId = _users.FirstOrDefault(u => u.Id == 1)?.Id, IsActive = true });
+                _resources.Add(new Resource { Id = 5, Name = "Ноутбук Dell", Type = "Equipment", Description = "Ноутбук для встреч и презентаций", ImagePath = DemoImages.Laptop, ResponsiblePersonId = _users.FirstOrDefault(u => u.Id == 2)?.Id, IsActive = true });
+                _resources.Add(new Resource { Id = 6, Name = "Переговорка \"Зеленая\"", Type = "MeetingRoom", Description = "Уютная переговорка на 4 человека", ImagePath = DemoImages.RoomGreen, ResponsiblePersonId = _users.FirstOrDefault(u => u.Id == 4)?.Id, IsActive = true });
+            }
+
+            ApplyDefaultImages();
+            Persist();
+            WireReferences();
+        }
+
+        // Если база уже создана раньше, всё равно проставляем фото демо-ресурсам
+        private void ApplyDefaultImages()
+        {
+            foreach (var r in _resources)
+            {
+                var current = r.ImagePath;
+                var isRemote = !string.IsNullOrWhiteSpace(current) &&
+                               (current.StartsWith("http://") || current.StartsWith("https://"));
+
+                // локальный путь может быть указан, но файла уже нет
+                var localMissing = !string.IsNullOrWhiteSpace(current) && !isRemote &&
+                                   !File.Exists(Path.IsPathRooted(current)
+                                       ? current
+                                       : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, current));
+
+                if (string.IsNullOrWhiteSpace(current) || localMissing)
+                {
+                    var image = DemoImages.ForResource(r);
+                    if (!string.IsNullOrWhiteSpace(image))
+                        r.ImagePath = image;
+                }
+            }
         }
 
         private int NextBookingId()

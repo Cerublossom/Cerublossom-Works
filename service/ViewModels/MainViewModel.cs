@@ -24,15 +24,16 @@ namespace service.ViewModels
         private readonly NotificationsView _notificationsView;
         private readonly UserView _userView;
 
-        public MainViewModel()
+        public MainViewModel(User currentUser = null)
         {
             _dataService = new DataService();
             _bookingService = new BookingService(_dataService);
             _notificationService = new NotificationService(_dataService);
 
-            SeedData(); // заполняем демо-данными при первом запуске
+            _bookingService.EnsureSeed(); // заполняем демо-данными при первом запуске
 
-            _currentUser = _bookingService.GetUsers().FirstOrDefault(u => u.Role == "Administrator")
+            _currentUser = currentUser
+                           ?? _bookingService.GetUsers().FirstOrDefault(u => u.Role == "Administrator")
                            ?? _bookingService.GetUsers().FirstOrDefault()
                            ?? new User(1, "Пользователь", "user@company.com");
 
@@ -50,7 +51,7 @@ namespace service.ViewModels
 
             CalendarViewVm.NewBookingRequested += () =>
             {
-                BookingViewVm.PrepareNewForDate(CalendarViewVm.SelectedDate);
+                BookingViewVm.PrepareNewForDate(CalendarViewVm.SelectedDate, _currentUser);
                 CurrentView = _bookingView;
             };
             BookingViewVm.BookingCreated += b =>
@@ -60,6 +61,7 @@ namespace service.ViewModels
                     $"Ваше бронирование подтверждено: \"{b.Resource.Name}\" {b.StartTime:dd.MM.yyyy HH:mm}–{b.EndTime:HH:mm}.",
                     NotificationType.BookingCreated,
                     b.Id);
+                CalendarViewVm.Load(); // обновляем слоты, чтобы новое бронирование сразу было видно
                 CurrentView = _calendarView;
             };
             BookingViewVm.CancelRequested += () => CurrentView = _calendarView;
@@ -67,7 +69,11 @@ namespace service.ViewModels
             CurrentView = _calendarView;
 
             ShowCalendarCommand = new RelayCommand(_ => CurrentView = _calendarView);
-            ShowBookingCommand = new RelayCommand(_ => CurrentView = _bookingView);
+            ShowBookingCommand = new RelayCommand(_ =>
+            {
+                BookingViewVm.PrepareNewForDate(CalendarViewVm.SelectedDate, _currentUser);
+                CurrentView = _bookingView;
+            });
             ShowResourcesCommand = new RelayCommand(_ => CurrentView = _resourceView);
             ShowNotificationsCommand = new RelayCommand(_ => CurrentView = _notificationsView);
             ShowUsersCommand = new RelayCommand(_ => CurrentView = _userView);
@@ -91,47 +97,19 @@ namespace service.ViewModels
         public NotificationsViewModel NotificationsViewVm { get; }
         public UserViewModel UserViewVm { get; }
 
+        // Фото для шапки приложения (зал переговоров, как в макете)
+        public string HeaderImage => DemoImages.RoomA;
+
         public ICommand ShowCalendarCommand { get; }
         public ICommand ShowBookingCommand { get; }
         public ICommand ShowResourcesCommand { get; }
         public ICommand ShowNotificationsCommand { get; }
         public ICommand ShowUsersCommand { get; }
 
-        private void OnBookSlotRequested(Resource resource, DateTime date)
+        private void OnBookSlotRequested(Resource resource, DateTime start, DateTime end)
         {
-            BookingViewVm.PrepareNew(resource, date);
+            BookingViewVm.PrepareNew(resource, start, end, _currentUser);
             CurrentView = _bookingView;
-        }
-
-        private void SeedData()
-        {
-            if (!_bookingService.GetUsers().Any())
-            {
-                var users = new List<User>
-                {
-                    new User(1, "Иван Иванов", "ivanov@company.com", "Administrator"),
-                    new User(2, "Мария Петрова", "petrova@company.com", "Employee"),
-                    new User(3, "Алексей Сидоров", "sidorov@company.com", "Employee"),
-                    new User(4, "Ольга Кузнецова", "kuznetsova@company.com", "Employee")
-                };
-                _dataService.Save("users.xml", users);
-            }
-
-            if (!_bookingService.GetResources().Any())
-            {
-                var users = _bookingService.GetUsers();
-                var resources = new List<Resource>
-                {
-                    new Resource { Id = 1, Name = "Конференц-зал А", Type = "ConferenceRoom", Description = "Переговорка на 12 человек, проектор, доска", ResponsiblePersonId = users.FirstOrDefault(u => u.Id == 1)?.Id, IsActive = true },
-                    new Resource { Id = 2, Name = "Конференц-зал Б", Type = "ConferenceRoom", Description = "Малый переговорный зал на 6 человек", ResponsiblePersonId = users.FirstOrDefault(u => u.Id == 2)?.Id, IsActive = true },
-                    new Resource { Id = 3, Name = "Проектор Epson", Type = "Equipment", Description = "Переносной проектор для презентаций", ResponsiblePersonId = users.FirstOrDefault(u => u.Id == 3)?.Id, IsActive = true },
-                    new Resource { Id = 4, Name = "Фотограф (студия)", Type = "Photographer", Description = "Услуги корпоративного фотографа по бронированию слота", ResponsiblePersonId = users.FirstOrDefault(u => u.Id == 1)?.Id, IsActive = true },
-                    new Resource { Id = 5, Name = "Ноутбук Dell", Type = "Equipment", Description = "Ноутбук для встреч и презентаций", ResponsiblePersonId = users.FirstOrDefault(u => u.Id == 2)?.Id, IsActive = true },
-                    new Resource { Id = 6, Name = "Переговорка \"Зеленая\"", Type = "MeetingRoom", Description = "Уютная переговорка на 4 человека", ResponsiblePersonId = users.FirstOrDefault(u => u.Id == 4)?.Id, IsActive = true }
-                };
-                foreach (var r in resources)
-                    _bookingService.AddResource(r);
-            }
         }
     }
 }

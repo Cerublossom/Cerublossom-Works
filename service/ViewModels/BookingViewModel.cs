@@ -27,8 +27,9 @@ namespace service.ViewModels
             CancelCommand = new RelayCommand(_ => CancelRequested?.Invoke());
 
             var slots = new List<string>();
-            for (var i = 8; i <= 20; i++)
-                slots.Add(new DateTime(1, 1, 1, i, 0, 0).ToString("HH:mm"));
+            // Бронирование оформляется по часу, поэтому в списке только целые часы
+            for (var t = new DateTime(1, 1, 1, 8, 0, 0); t <= new DateTime(1, 1, 1, 20, 0, 0); t = t.AddHours(1))
+                slots.Add(t.ToString("HH:mm"));
             TimeSlots = slots;
         }
 
@@ -62,7 +63,19 @@ namespace service.ViewModels
         public string StartTime
         {
             get => _startTime;
-            set { Set(ref _startTime, value); Validate(); }
+            set
+            {
+                if (!Set(ref _startTime, value))
+                    return;
+
+                // Бронирование всегда на час: конец подставляется автоматически
+                DateTime start;
+                if (DateTime.TryParse(value, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out start) &&
+                    start.TimeOfDay <= new TimeSpan(19, 0, 0))
+                    EndTime = start.AddHours(1).ToString("HH:mm");
+
+                Validate();
+            }
         }
 
         public string EndTime
@@ -92,24 +105,35 @@ namespace service.ViewModels
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
 
-        public void PrepareNew(Resource resource, DateTime date)
+        // Открывает форму по клику на свободный слот: ресурс, дата и точное время уже заполнены.
+        // Кем бронируется, пользователь может поменять в списке сотрудников.
+        public void PrepareNew(Resource resource, DateTime start, DateTime end, User preferredUser = null)
         {
             SelectedResource = resource;
-            SelectedDate = date;
-            StartTime = date.AddHours(9).ToString("HH:mm");
-            EndTime = date.AddHours(10).ToString("HH:mm");
-            SelectedUser = Users.FirstOrDefault();
+            SelectedDate = start.Date;
+            StartTime = start.ToString("HH:mm");
+            EndTime = end.ToString("HH:mm");
+            SelectedUser = preferredUser != null && Users.Any(u => u.Id == preferredUser.Id)
+                ? Users.First(u => u.Id == preferredUser.Id)
+                : Users.FirstOrDefault();
             Purpose = string.Empty;
             StatusMessage = string.Empty;
         }
 
-        public void PrepareNewForDate(DateTime date)
+        public void PrepareNew(Resource resource, DateTime date)
+        {
+            PrepareNew(resource, date.AddHours(9), date.AddHours(10));
+        }
+
+        public void PrepareNewForDate(DateTime date, User preferredUser = null)
         {
             SelectedResource = Resources.FirstOrDefault();
             SelectedDate = date;
             StartTime = date.AddHours(9).ToString("HH:mm");
             EndTime = date.AddHours(10).ToString("HH:mm");
-            SelectedUser = Users.FirstOrDefault();
+            SelectedUser = preferredUser != null && Users.Any(u => u.Id == preferredUser.Id)
+                ? Users.First(u => u.Id == preferredUser.Id)
+                : Users.FirstOrDefault();
             Purpose = string.Empty;
             StatusMessage = string.Empty;
         }

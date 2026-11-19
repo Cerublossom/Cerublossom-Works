@@ -14,7 +14,7 @@ namespace service.ViewModels
         private readonly NotificationService _notificationService;
         private DateTime _selectedDate = DateTime.Today;
 
-        public CalendarViewModel(BookingService bookingService, NotificationService notificationService, Action<Resource, DateTime> onBookSlot)
+        public CalendarViewModel(BookingService bookingService, NotificationService notificationService, Action<Resource, DateTime, DateTime> onBookSlot)
         {
             _bookingService = bookingService;
             _notificationService = notificationService;
@@ -40,11 +40,15 @@ namespace service.ViewModels
         public ObservableCollection<ResourceCalendarViewModel> ResourceCalendars { get; } =
             new ObservableCollection<ResourceCalendarViewModel>();
 
+        // Активные бронирования на выбранную дату (панель справа)
+        public ObservableCollection<Booking> ActiveBookings { get; } =
+            new ObservableCollection<Booking>();
+
         public ICommand LoadCommand { get; }
         public ICommand RefreshCommand { get; }
         public ICommand NewBookingCommand { get; }
 
-        public Action<Resource, DateTime> OnBookSlot { get; }
+        public Action<Resource, DateTime, DateTime> OnBookSlot { get; }
         public event Action NewBookingRequested;
 
         public void Load()
@@ -52,10 +56,16 @@ namespace service.ViewModels
             ResourceCalendars.Clear();
             foreach (var r in _bookingService.GetResources().Where(r => r.IsActive).OrderBy(r => r.Name))
             {
-                var vm = new ResourceCalendarViewModel(r, _bookingService.GetBookingsForResource(r.Id, SelectedDate));
-                vm.BookSlotRequested += slot => OnBookSlot?.Invoke(vm.Resource, slot.Start);
+                var vm = new ResourceCalendarViewModel(r, _bookingService.GetBookingsForResource(r.Id, SelectedDate), SelectedDate);
+                // Клик по свободному слоту открывает бронирование с уже заполненными
+                // ресурсом, датой и временем именно этого слота.
+                vm.BookSlotRequested += slot => OnBookSlot?.Invoke(vm.Resource, slot.Start, slot.End);
                 ResourceCalendars.Add(vm);
             }
+
+            ActiveBookings.Clear();
+            foreach (var b in _bookingService.GetBookingsForDate(SelectedDate))
+                ActiveBookings.Add(b);
         }
     }
 
@@ -66,14 +76,17 @@ namespace service.ViewModels
 
         public event Action<CalendarSlotViewModel> BookSlotRequested;
 
-        public ResourceCalendarViewModel(Resource resource, List<Booking> bookings)
+        public ResourceCalendarViewModel(Resource resource, List<Booking> bookings, DateTime date)
         {
             Resource = resource;
-            var day = bookings.FirstOrDefault()?.StartTime.Date ?? DateTime.Today;
+            // День берём из календаря, а не из бронирований — иначе у свободного
+            // ресурса слоты строились бы на сегодняшнюю дату.
+            var day = date.Date;
 
-            for (var t = day.AddHours(8); t < day.AddHours(20); t = t.AddMinutes(30))
+            // Слоты идут ровно по часу: с 08:00 до 20:00
+            for (var t = day.AddHours(8); t < day.AddHours(20); t = t.AddHours(1))
             {
-                var end = t.AddMinutes(30);
+                var end = t.AddHours(1);
                 var b = bookings.FirstOrDefault(x => x.StartTime < end && x.EndTime > t);
                 var slot = new CalendarSlotViewModel(t, end, b);
                 slot.BookSlotRequested += () => BookSlotRequested?.Invoke(slot);

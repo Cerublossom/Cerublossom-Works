@@ -23,7 +23,8 @@ namespace service.ViewModels
             Start = start;
             End = end;
             Booking = booking;
-            BookCommand = new RelayCommand(_ => BookSlotRequested?.Invoke());
+            // Нажимать можно только на свободный слот, занятые время не открывают форму
+            BookCommand = new RelayCommand(_ => BookSlotRequested?.Invoke(), _ => !IsBooked);
         }
     }
 }

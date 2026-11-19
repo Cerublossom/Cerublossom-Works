@@ -60,6 +60,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="WelcomeWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Views\CalendarView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -88,6 +92,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="WelcomeWindow.xaml.cs">
+      <DependentUpon>WelcomeWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Models\Booking.cs" />
     <Compile Include="Models\ConflictException.cs" />
     <Compile Include="Models\Enums.cs" />
@@ -96,11 +104,14 @@
     <Compile Include="Models\User.cs" />
     <Compile Include="Services\BookingService.cs" />
     <Compile Include="Services\DataService.cs" />
+    <Compile Include="Services\DemoImages.cs" />
     <Compile Include="Services\NotificationService.cs" />
     <Compile Include="ViewModels\BookingViewModel.cs" />
     <Compile Include="ViewModels\CalendarSlotViewModel.cs" />
     <Compile Include="ViewModels\SlotBackgroundConverter.cs" />
     <Compile Include="ViewModels\CalendarViewModel.cs" />
+    <Compile Include="ViewModels\CountToVisibilityConverter.cs" />
+    <Compile Include="ViewModels\ImagePathConverter.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\NotificationsViewModel.cs" />
     <Compile Include="ViewModels\RelayCommand.cs" />
@@ -149,6 +160,12 @@
     <None Include="App.config" />
     <None Include=".gitignore" />
     <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Фотографии ресурсов: копируются рядом с exe -->
+    <Content Include="Images\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

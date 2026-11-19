@@ -17,14 +17,22 @@ namespace service.ViewModels
         private string _email;
         private string _role = "Employee";
         private bool _isActive = true;
+        private bool _isEditing;
         private string _statusMessage;
+        private string _searchText;
+        private string _sortMode = "По алфавиту";
+        private DateTime _selectedDate = DateTime.Today;
 
         public UserViewModel(BookingService bookingService)
         {
             _bookingService = bookingService;
 
             SaveCommand = new RelayCommand(_ => Save(), _ => CanSave);
-            DeleteCommand = new RelayCommand(_ => Delete(), _ => SelectedUser != null);
+            DeleteCommand = new RelayCommand<User>(u =>
+            {
+                SelectedUser = u;
+                Delete();
+            }, u => u != null);
             EditCommand = new RelayCommand<User>(u => StartEdit(u));
             NewCommand = new RelayCommand(_ => StartEdit(null));
             CancelEditCommand = new RelayCommand(_ => CancelEdit());
@@ -34,7 +42,12 @@ namespace service.ViewModels
 
         public ObservableCollection<User> Users { get; } = new ObservableCollection<User>();
 
+        // Бронирования на выбранный день — для панели "Активные приглашения"
+        public ObservableCollection<Booking> DayBookings { get; } = new ObservableCollection<Booking>();
+
         public List<string> Roles { get; } = new List<string> { "Administrator", "Employee" };
+
+        public List<string> SortModes { get; } = new List<string> { "По алфавиту", "По роли" };
 
         public User SelectedUser
         {
@@ -66,13 +79,48 @@ namespace service.ViewModels
             set => Set(ref _isActive, value);
         }
 
+        // Поиск по ФИО и email в верхней панели
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                if (Set(ref _searchText, value))
+                    Load();
+            }
+        }
+
+        public string SortMode
+        {
+            get => _sortMode;
+            set
+            {
+                if (Set(ref _sortMode, value))
+                    Load();
+            }
+        }
+
+        public DateTime SelectedDate
+        {
+            get => _selectedDate;
+            set
+            {
+                if (Set(ref _selectedDate, value))
+                    LoadDayBookings();
+            }
+        }
+
         public string StatusMessage
         {
             get => _statusMessage;
             set => Set(ref _statusMessage, value);
         }
 
-        public bool IsEditing => _editing != null;
+        public bool IsEditing
+        {
+            get => _isEditing;
+            set => Set(ref _isEditing, value);
+        }
 
         public bool CanSave => !string.IsNullOrWhiteSpace(FullName) && !string.IsNullOrWhiteSpace(Email);
 
@@ -84,9 +132,38 @@ namespace service.ViewModels
 
         private void Load()
         {
+            var query = _bookingService.GetUsers().AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                var text = SearchText.ToLowerInvariant();
+                query = query.Where(u =>
+                    (u.FullName ?? string.Empty).ToLowerInvariant().Contains(text) ||
+                    (u.Email ?? string.Empty).ToLowerInvariant().Contains(text));
+            }
+
+            if (SortMode == "По роли")
+                query = query.OrderBy(u => u.Role).ThenBy(u => u.FullName);
+            else
+                query = query.OrderBy(u => u.FullName);
+
             Users.Clear();
-            foreach (var u in _bookingService.GetUsers().OrderBy(u => u.FullName))
+            foreach (var u in query)
                 Users.Add(u);
+
+            LoadDayBookings();
+        }
+
+        private void LoadDayBookings()
+        {
+            DayBookings.Clear();
+            foreach (var b in _bookingService.GetBookings()
+                         .Where(b => b.StartTime.Date == SelectedDate.Date &&
+                                     b.Status != BookingStatus.Cancelled)
+                         .OrderBy(b => b.StartTime))
+            {
+                DayBookings.Add(b);
+            }
         }
 
         private void StartEdit(User u)
@@ -97,14 +174,15 @@ namespace service.ViewModels
             Email = u?.Email ?? string.Empty;
             Role = u?.Role ?? "Employee";
             IsActive = u?.IsActive ?? true;
-            Raise(nameof(IsEditing));
+            StatusMessage = string.Empty;
+            IsEditing = true;
         }
 
         private void CancelEdit()
         {
             _editing = null;
+            IsEditing = false;
             ClearForm();
-            Raise(nameof(IsEditing));
         }
 
         private void ClearForm()

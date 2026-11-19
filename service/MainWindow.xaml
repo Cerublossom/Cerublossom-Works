@@ -3,39 +3,87 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:service"
+        xmlns:vm="clr-namespace:service.ViewModels"
         mc:Ignorable="d"
-        Title="Сервис бронирования общих ресурсов"
-        Height="768" Width="1200"
+        Title="СБР — Сервис бронирования ресурсов"
+        Height="860" Width="1400" MinHeight="720" MinWidth="1180"
+        WindowState="Maximized"
         WindowStartupLocation="CenterScreen">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="260"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+    <Window.Resources>
+        <vm:ImagePathConverter x:Key="ImagePathConverter"/>
+        <LinearGradientBrush x:Key="HeroOverlay" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#D908120E" Offset="0"/>
+            <GradientStop Color="#B3122520" Offset="0.55"/>
+            <GradientStop Color="#E60B1511" Offset="1"/>
+        </LinearGradientBrush>
+    </Window.Resources>
 
-        <!-- Боковая навигация (темная, как в макете) -->
-        <Border Grid.Column="0" Background="#0F1717" Padding="20,24,20,20">
-            <StackPanel>
-                <TextBlock Text="СБР" FontWeight="Bold" FontSize="24" Foreground="{StaticResource TextLight}" Margin="0,0,0,8"/>
-                <TextBlock Text="Сервис бронирования ресурсов" FontSize="13" Foreground="#888888" TextWrapping="Wrap" Margin="0,0,0,32"/>
+    <Grid Background="{StaticResource PageBg}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-                <Button Content="Календарь ресурсов" Command="{Binding ShowCalendarCommand}" Width="220" Margin="0,0,0,8" HorizontalAlignment="Left"/>
-                <Button Content="Создать бронирование" Command="{Binding ShowBookingCommand}" Width="220" Margin="0,0,0,8" HorizontalAlignment="Left"/>
-                <Button Content="Управление ресурсами" Command="{Binding ShowResourcesCommand}" Width="220" Margin="0,0,0,8" HorizontalAlignment="Left"/>
-                <Button Content="Уведомления" Command="{Binding ShowNotificationsCommand}" Width="220" Margin="0,0,0,8" HorizontalAlignment="Left"/>
-                <Button Content="Пользователи" Command="{Binding ShowUsersCommand}" Width="220" Margin="0,0,0,24" HorizontalAlignment="Left"/>
+        <!-- Шапка как в макете: фотография зала с затемнением,
+             под ней тёмная полоса навигации -->
+        <Grid Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="150"/>
+                <RowDefinition Height="56"/>
+            </Grid.RowDefinitions>
 
-                <Border BorderBrush="#333333" BorderThickness="0,1,0,0" Margin="0,0,0,16"/>
+            <Grid Grid.Row="0">
+                <Border Background="{StaticResource DarkBg}"/>
+                <Image Source="{Binding HeaderImage, Converter={StaticResource ImagePathConverter}}"
+                       Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality"/>
+                <Rectangle Fill="{StaticResource HeroOverlay}"/>
 
-                <TextBlock Text="Пользователь:" FontSize="11" Foreground="#888888" Margin="0,0,0,4"/>
-                <TextBlock Text="{Binding CurrentUser.DisplayName}" FontWeight="Bold" Foreground="{StaticResource TextLight}"/>
-                <TextBlock Text="{Binding CurrentUser.Email}" FontSize="11" Foreground="#888888" Margin="0,2,0,0"/>
-                <TextBlock Text="{Binding CurrentUser.Role}" FontSize="11" Foreground="#888888" Margin="0,0,0,16"/>
-            </StackPanel>
-        </Border>
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="760">
+                    <TextBlock Text="Сервис бронирования общих ресурсов"
+                               FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextLight}"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="Переговорные комнаты, техника и студии в одном календаре. Выберите свободное время, пригласите коллег и не беспокойтесь о накладках."
+                               FontSize="11" Foreground="#E9F1EC" TextAlignment="Center"
+                               TextWrapping="Wrap" Margin="0,8,0,0" LineHeight="17"/>
+                </StackPanel>
+            </Grid>
 
-        <!-- Основная область (светлая, как в макете) -->
-        <ContentControl Grid.Column="1" Content="{Binding CurrentView}" Margin="0" Background="{StaticResource PanelBg}"/>
+            <!-- Навигационная полоса -->
+            <Border Grid.Row="1" Background="{StaticResource SidebarBg}">
+                <Grid Margin="26,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                        <!-- Логотип: квадрат с карандашом -->
+                        <Grid Width="26" Height="26" Margin="0,0,12,0">
+                            <Border BorderBrush="White" BorderThickness="2" CornerRadius="3"/>
+                            <Canvas Width="26" Height="26">
+                                <Path Fill="White" Data="M 12,19 L 20,11 L 23,14 L 15,22 Z"/>
+                                <Path Fill="White" Data="M 21,10 L 23,8 L 26,11 L 24,13 Z"/>
+                            </Canvas>
+                        </Grid>
+                        <TextBlock Text="СБР" FontSize="17" FontWeight="Bold"
+                                   Foreground="{StaticResource TextLight}" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Content="Календарь" Style="{StaticResource NavButton}" Command="{Binding ShowCalendarCommand}"/>
+                        <Button Content="Бронирование" Style="{StaticResource NavButton}" Command="{Binding ShowBookingCommand}"/>
+                        <Button Content="Ресурсы" Style="{StaticResource NavButton}" Command="{Binding ShowResourcesCommand}"/>
+                        <Button Content="Люди" Style="{StaticResource NavButton}" Command="{Binding ShowUsersCommand}"/>
+                        <Button Content="Уведомления" Style="{StaticResource NavButton}" Command="{Binding ShowNotificationsCommand}"/>
+
+                        <Border Width="28" Height="28" CornerRadius="14" Background="{StaticResource Accent}" Margin="16,0,8,0">
+                            <TextBlock Text="{Binding CurrentUser.Initials}" FontSize="10" FontWeight="Bold"
+                                       Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="{Binding CurrentUser.DisplayName}" FontSize="12"
+                                   Foreground="#E9F1EC" VerticalAlignment="Center" MaxWidth="180"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Рабочая область: светлая, как на макете -->
+        <ContentControl Grid.Row="1" Content="{Binding CurrentView}" Background="{StaticResource PageBg}"/>
     </Grid>
 </Window>

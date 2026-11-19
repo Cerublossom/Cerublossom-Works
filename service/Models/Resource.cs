@@ -8,6 +8,7 @@ namespace service.Models
         public string Name { get; set; }
         public string Type { get; set; } // ConferenceRoom, Equipment, Photographer, MeetingRoom, Other
         public string Description { get; set; }
+        public string ImagePath { get; set; } // путь к фото: локальный файл или ссылка http(s)
         public int? ResponsiblePersonId { get; set; }
 
         [XmlIgnore]

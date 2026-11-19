@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Windows.Input;
+using Microsoft.Win32;
 using service.Models;
 using service.Services;
 
@@ -14,6 +16,7 @@ namespace service.ViewModels
         private string _name;
         private string _type = "ConferenceRoom";
         private string _description;
+        private string _imagePath;
         private User _responsible;
         private bool _isActive = true;
         private Resource _editing;
@@ -28,6 +31,7 @@ namespace service.ViewModels
             EditCommand = new RelayCommand<Resource>(r => StartEdit(r), r => r != null);
             NewCommand = new RelayCommand(_ => StartEdit(null));
             CancelEditCommand = new RelayCommand(_ => CancelEdit());
+            PickImageCommand = new RelayCommand(_ => PickImage());
 
             Load();
         }
@@ -71,6 +75,12 @@ namespace service.ViewModels
             set => Set(ref _description, value);
         }
 
+        public string ImagePath
+        {
+            get => _imagePath;
+            set => Set(ref _imagePath, value);
+        }
+
         public User Responsible
         {
             get => _responsible;
@@ -98,6 +108,7 @@ namespace service.ViewModels
         public ICommand EditCommand { get; }
         public ICommand NewCommand { get; }
         public ICommand CancelEditCommand { get; }
+        public ICommand PickImageCommand { get; }
 
         private void Load()
         {
@@ -112,6 +123,7 @@ namespace service.ViewModels
             Name = r?.Name ?? string.Empty;
             Type = r?.Type ?? "ConferenceRoom";
             Description = r?.Description ?? string.Empty;
+            ImagePath = r?.ImagePath ?? string.Empty;
             Responsible = r != null ? Users.FirstOrDefault(u => u.Id == r.ResponsiblePersonId.GetValueOrDefault()) : null;
             IsActive = r?.IsActive ?? true;
             SelectedResource = r;
@@ -130,6 +142,7 @@ namespace service.ViewModels
             Name = string.Empty;
             Type = "ConferenceRoom";
             Description = string.Empty;
+            ImagePath = string.Empty;
             Responsible = null;
             IsActive = true;
             SelectedResource = null;
@@ -142,6 +155,7 @@ namespace service.ViewModels
                 _editing.Name = Name;
                 _editing.Type = Type;
                 _editing.Description = Description;
+                _editing.ImagePath = ImagePath;
                 _editing.ResponsiblePersonId = Responsible?.Id;
                 _editing.ResponsiblePerson = Responsible;
                 _editing.IsActive = IsActive;
@@ -154,6 +168,7 @@ namespace service.ViewModels
                     Name = Name,
                     Type = Type,
                     Description = Description,
+                    ImagePath = ImagePath,
                     ResponsiblePersonId = Responsible?.Id,
                     ResponsiblePerson = Responsible,
                     IsActive = IsActive
@@ -184,6 +199,46 @@ namespace service.ViewModels
             Load();
             CancelEdit();
             StatusMessage = "Ресурс удалён.";
+        }
+
+        // Выбор фото: копируем картинку в папку Images рядом с программой,
+        // чтобы проект не зависел от исходного расположения файла
+        private void PickImage()
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = "Фото ресурса",
+                Filter = "Изображения|*.jpg;*.jpeg;*.png;*.bmp"
+            };
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            try
+            {
+                var imagesDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images");
+                Directory.CreateDirectory(imagesDir);
+
+                var fileName = Path.GetFileNameWithoutExtension(dialog.FileName);
+                var extension = Path.GetExtension(dialog.FileName);
+                var target = Path.Combine(imagesDir, fileName + extension);
+                var counter = 1;
+
+                // если файл с таким именем уже есть — добавляем номер
+                while (File.Exists(target))
+                {
+                    target = Path.Combine(imagesDir, fileName + "_" + counter + extension);
+                    counter++;
+                }
+
+                File.Copy(dialog.FileName, target);
+                ImagePath = "Images/" + Path.GetFileName(target);
+                StatusMessage = string.Empty;
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = "Не удалось загрузить фото: " + ex.Message;
+            }
         }
     }
 }
